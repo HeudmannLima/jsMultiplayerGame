@@ -14,7 +14,25 @@
 
     <canvas id="screen" width="10" height="10"></canvas>
 
-    <script src="canvas.js"></script>
+    <script type="module">
+        import createGame from "./game.js";
+        import createKeyboardListener from "./keyboard-listener.js";
+        import renderScreen from "./render-screen.js";
+
+        ////////////////////////////////////////////////////////////
+        // PRINCIPAL, onde se usa os FACTORYS instanciando-os
+        // e usa/registra (subscribe) os OBSERVERS
+        ////////////////////////////////////////////////////////////
+        const game = createGame();
+        const keyboardListener = createKeyboardListener(document);
+        keyboardListener.subscribe(game.movePlayer);    // Subscribe registrado
+
+        const screen = document.getElementById('screen');
+        renderScreen(screen, game, requestAnimationFrame);
+
+        game.addPlayer({ playerId: "player1", playerX: 0, playerY:0 });
+        game.addFruit({ fruitId: "fruit1", fruitX: 5, fruitY: 5 });
+    </script>
 
 </body>
 
