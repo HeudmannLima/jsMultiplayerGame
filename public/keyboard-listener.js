@@ -4,8 +4,13 @@ export default function createKeyboardListener(document) {
 
     // PATTERN OBSERVER
     const state = {
-        observers: []
+        observers: [],
+        playerId: null
     };
+
+    function registerPlayerId(playerId) {
+        state.playerId = playerId;
+    }
 
     // 1. Aqui Observers se REGISTRAM dentro do Subject (observers[])
     function subscribe(observerFunction) {
@@ -20,7 +25,6 @@ export default function createKeyboardListener(document) {
         for (const observerFunction of state.observers) {
             observerFunction(command);
         }
-
     }
 
     document.addEventListener('keydown', handleKeyDown);
@@ -29,7 +33,8 @@ export default function createKeyboardListener(document) {
         const keyPressed = event.key;
     
         const command = {
-            playerId: 'player1',
+            type: 'move-player',
+            playerId: state.playerId,
             keyPressed
         };
 
@@ -39,6 +44,7 @@ export default function createKeyboardListener(document) {
     }
 
     return {
-        subscribe
+        subscribe,
+        registerPlayerId
     };
 }

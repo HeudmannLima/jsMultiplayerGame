@@ -3,59 +3,101 @@
 // que podemos utilizar depois.
 export default function createGame() {
 
-    // const state = {
-    //     players: {
-    //         'player1': { x: 1, y: 1 },
-    //         'player2': { x: 9, y: 9 },
-    //     },
-    //     fruits: {
-    //         'fruit1':  { x: 3, y: 1 }, 
-    //     }
-    // };
-
     const state = {
         players: {},
         fruits: {},
         screen: {
-            width: 10,
-            height: 10
+            width: 30,
+            height: 30
         }
     };
 
+    // PATTERN OBSERVER
+    const observers = [];
+
+    function start() {
+        const frequency = 4000;
+
+        setInterval(addFruit, frequency);
+    }
+
+    function subscribe(observerFunction) {
+        observers.push(observerFunction);
+    }
+
+    function notifyAll(command) {
+        for (const observerFunction of observers) {
+            observerFunction(command);
+        }
+    }
+    /////////////////////
+
+    function setState(newState) {
+        Object.assign(state, newState); 
+        // Faz um MERGE do state novo com o novo state que já estava na instancia
+    }
+
     function addPlayer(command) {
         const playerId = command.playerId;
-        const playerX = command.playerX;
-        const playerY = command.playerY;
+        const playerX = 'playerX' in command ? command.playerX : Math.floor(Math.random() * state.screen.width);
+        const playerY = 'playerY' in command ? command.playerY : Math.floor(Math.random() * state.screen.height);
 
         state.players[playerId] ={
             x: playerX,
             y: playerY
         };
+
+        notifyAll({
+            type: 'add-player',
+            playerId: playerId,
+            playerX: playerX,
+            playerY: playerY
+        });
+
     }
     function removePlayer(command) {
         const playerId = command.playerId;
 
         delete state.players[playerId];
+
+        notifyAll({ 
+            type: 'remove-player',
+            playerId: playerId
+        });
     }
 
     function addFruit(command) {
-        const fruitId = command.fruitId;
-        const fruitX = command.fruitX;
-        const fruitY = command.fruitY;
+        const fruitId = command ? command.fruitId : Math.floor(Math.random() * 10000000);
+        const fruitX = command ? command.fruitX : Math.floor(Math.random() * state.screen.width);
+        const fruitY = command ? command.fruitY : Math.floor(Math.random() * state.screen.height);
 
         state.fruits[fruitId] ={
             x: fruitX,
             y: fruitY
         };
+
+        notifyAll({
+            type: 'add-fruit',
+            fruitId: fruitId,
+            fruitX: fruitX,
+            fruitY: fruitY
+        });
     }
     function removeFruit(command) {
         const fruitId = command.fruitId;
 
         delete state.fruits[fruitId];
+
+        notifyAll({
+            type: 'remove-fruit',
+            fruitId: fruitId,
+        });
     }
 
     function movePlayer(command) {
-        console.log(`game.movePlayer() -> Moving ${command.playerId} with ${command.keyPressed}`);
+        // console.log(`game.movePlayer() -> Moving ${command.playerId} with ${command.keyPressed}`);
+
+        notifyAll(command);
 
         const acceptedMoves = {
             ArrowUp(player) {
@@ -67,12 +109,12 @@ export default function createGame() {
             },
             ArrowRight(player) {
                 console.log('Moving Right');
-                if (player.x + 1 < screen.width)
+                if (player.x + 1 < state.screen.width)
                 player.x = player.x+1;
             },
             ArrowDown(player) {
                 console.log('Moving Down');
-                if (player.y + 1 < screen.height)
+                if (player.y + 1 < state.screen.height)
                 player.y = player.y+1;
             },
             ArrowLeft(player) {
@@ -81,7 +123,7 @@ export default function createGame() {
                 player.x = player.x-1;
             },
             b(player) {
-                console.log("BOMBA!");
+                console.log("BOMBA! de " + player);
             }
         };
 
@@ -117,9 +159,12 @@ export default function createGame() {
     return {
         addPlayer,
         removePlayer,
+        movePlayer,
         addFruit,
         removeFruit,
-        movePlayer,
-        state
+        state,
+        setState,
+        subscribe,
+        start
     };
 }
